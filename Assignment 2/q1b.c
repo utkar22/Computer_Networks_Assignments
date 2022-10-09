@@ -1,3 +1,6 @@
+//This is the program to run a concurrent client.
+//It utilises threads to generate n number of requests.
+
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,12 +8,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <pthread.h>
-#include<semaphore.h>
 #define PORT 8080
 #define SA struct sockaddr
 
-sem_t lock;
-int total_threads = 10;
 
 void * thread_func(){
     int socket_id, connection_id;
@@ -35,7 +35,7 @@ void * thread_func(){
         exit(0);
     }
 
-    int i = rand()%10;
+    int i = rand()%9 + 1;
 
     int len;
     char fact[200];
@@ -57,22 +57,24 @@ void * thread_func(){
     printf("Recieved message:\n%s\n\n",fact);
 
     close(socket_id);
-    sem_post(&lock);
 }
 
 
 int main(){
-    pthread_t arr[20];
+    int total_threads;
+    printf("Total number of threads you want: ");
+    scanf("%d",&total_threads);
+    printf("\n");
 
-    sem_init(&lock, 0, 10);
+    pthread_t arr[total_threads];
 
-    for (int i = 0; i<20; i++){
-        printf("Thread number:%d; Free Threads:%d",i,lock);
-        sem_wait(&lock);
+    for (int i = 0; i<total_threads; i++){
         pthread_create(&arr[i], NULL, thread_func, NULL);
     }
 
-    sleep(30);
+    for (int i = 0; i<total_threads; i++){
+        pthread_join(arr[i],NULL);
+    }
     
     return 0;
 }

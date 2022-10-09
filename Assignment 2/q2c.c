@@ -1,5 +1,5 @@
 //This is the program to run concurrent server program with multiple processes
-//using fork system call
+//using threads
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -10,14 +10,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <pthread.h>
 #include <signal.h>
 
 #define PORT 8080
-#define SA struct 
+#define SA struct sockaddr
 
 int sockfd;
+struct sockaddr_in serverAddr;
+pid_t childpid;
+sem_t file_lock;
 FILE *our_file;
-
 
 void sigHandler(int sig_num)
 {   
@@ -37,16 +40,48 @@ long int factorial(int n){
     return fact;
 }
 
+void * thread_func(void *cS){
+    
+    int clientSocket;
+    clientSocket = *(int*) cS;
+    //printf("Socket ID there: %d\n",clientSocket);
+    // Closing the server socket id
+    //close(sockfd);
+
+    // Send a confirmation message
+    // to the client
+    char inp[2000];
+    read(clientSocket, inp, 2000);
+    printf("Recieved message %s\n",inp);
+
+    int num;
+    num = atoi(inp);
+
+    long int fact = factorial(num); 
+    char fact_char[200];
+
+    sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,serverAddr.sin_addr.s_addr,serverAddr.sin_port);
+
+    
+    sem_wait(&file_lock);
+    fprintf(our_file,"%s",fact_char);
+    sem_post(&file_lock);
+    
+
+
+    send(clientSocket, fact_char, 200, 0);
+    printf("Replied:%s\n\n",fact_char);
+}
+
 int main(){
     signal(SIGINT, sigHandler);
-    printf("This is the Concurrent Server Program using fork\n");
 
-    int ret, clientSocket;
-    struct sockaddr_in serverAddr, cliAddr;
+    printf("This is the Concurrent Server Program using threads\n");
+
+    int ret;
+    int clientSocket;
+    struct sockaddr_in cliAddr;
     socklen_t addr_size;
-    pid_t childpid;
-
-    sem_t file_lock;
  
     
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -87,49 +122,34 @@ int main(){
     int cnt = 0;
 
     //Creating the file
-    our_file = fopen("q2b_file.txt", "w");
+    our_file = fopen("q2c_file.txt", "w");
     sem_init(&file_lock,0,1);
    
     while (1) {
  
         // Accept clients and
         // store their information in cliAddr
+        
         clientSocket = accept(sockfd, (struct sockaddr*)&cliAddr, &addr_size);
  
         // Error handling
         if (clientSocket < 0) {
+            printf("There was some error in connection.\n");
             exit(1);
         }
+
  
-        // Creates a child process
-        if ((childpid = fork()) == 0) {
- 
-            // Closing the server socket id
-            close(sockfd);
- 
-            // Send a confirmation message
-            // to the client
-            char inp[2000];
-            read(clientSocket, inp, 2000);
-            printf("Recieved message %s\n",inp);
+        // Creates a thread
+        pthread_t thread;
+        //printf("Socket ID here: %d\n",clientSocket);
 
-            int num;
-            num = atoi(inp);
-
-            long int fact = factorial(num); 
-            char fact_char[200];
-
-            sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,serverAddr.sin_addr.s_addr,serverAddr.sin_port);
-
-            sem_wait(&file_lock);
-            fprintf(our_file,"%s",fact_char);
-            sem_post(&file_lock);
-
-
-            send(clientSocket, fact_char, 200, 0);
-            printf("Replied:%s\n\n",fact_char);
-        }
+        //int *cS = malloc(sizeof(*cS));
+        pthread_create(&thread, NULL, thread_func, (void*)&clientSocket);
+        pthread_join(thread, NULL);
+        fflush(our_file);
     }
+
+    //sleep(60);
  
 
     // Close the client socket id

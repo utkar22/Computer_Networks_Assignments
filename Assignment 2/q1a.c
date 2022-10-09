@@ -1,3 +1,7 @@
+//This is the program to run a sequential client.
+//The client generates 20 requests, displays the response
+//and closes the connection after 20 requests.
+
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,7 +68,7 @@ int main(){
 
     }
 
-    printf("Closing the socket\nExiting\n");
+    printf("Closing the socket\nClosing the file\nExiting\n");
     close(socket_id);
     return 0;
 }

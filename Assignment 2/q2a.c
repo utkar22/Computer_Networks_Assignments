@@ -1,3 +1,7 @@
+//This is the program to run the sequential server.
+//For each request, it computes the factorial of the number,
+//and stores it in the file and sends it back to the client as well
+
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <netdb.h>
@@ -73,6 +77,8 @@ int main(){
 
     close(socket_id);
 
+    //Creating the file
+    FILE *our_file = fopen("q2a_file.txt", "w");
     
 
     while (1){
@@ -86,7 +92,9 @@ int main(){
         long int fact = factorial(num); 
         char fact_char[200];
 
-        sprintf(fact_char,"Factorial of %d is %ld.\n IP Address: %u\n Port: %d",num,fact,servaddr.sin_addr.s_addr,servaddr.sin_port);
+        sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,servaddr.sin_addr.s_addr,servaddr.sin_port);
+
+        fprintf(our_file,"%s",fact_char);
 
         send(connection_id, fact_char, 200, 0);
         printf("Replied:\n%s\n\n",fact_char);
@@ -96,6 +104,8 @@ int main(){
             break;
         }
     }
+
+    fclose(our_file);
     close(socket_id);
     return 0;
 }
