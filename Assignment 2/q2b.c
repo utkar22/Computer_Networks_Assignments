@@ -103,31 +103,40 @@ int main(){
  
         // Creates a child process
         if ((childpid = fork()) == 0) {
- 
+            
             // Closing the server socket id
             close(sockfd);
+            int count = 0;
+
+            while(1){
  
-            // Send a confirmation message
-            // to the client
-            char inp[2000];
-            read(clientSocket, inp, 2000);
-            printf("Recieved message %s\n",inp);
+                // Send a confirmation message
+                // to the client
+                char inp[2000];
+                read(clientSocket, inp, 2000);
+                printf("Recieved message %s\n",inp);
 
-            int num;
-            num = atoi(inp);
+                int num;
+                num = atoi(inp);
 
-            long int fact = factorial(num); 
-            char fact_char[200];
+                long int fact = factorial(num); 
+                char fact_char[200];
 
-            sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,serverAddr.sin_addr.s_addr,serverAddr.sin_port);
+                sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,serverAddr.sin_addr.s_addr,serverAddr.sin_port);
 
-            sem_wait(&file_lock);
-            fprintf(our_file,"%s",fact_char);
-            sem_post(&file_lock);
+                sem_wait(&file_lock);
+                fprintf(our_file,"%s",fact_char);
+                sem_post(&file_lock);
 
 
-            send(clientSocket, fact_char, 200, 0);
-            printf("Replied:%s\n\n",fact_char);
+                send(clientSocket, fact_char, 200, 0);
+                printf("Replied:%s\n\n",fact_char);
+
+                count++;
+                if (count == 20){
+                    break;
+                }
+            }
         }
     }
  

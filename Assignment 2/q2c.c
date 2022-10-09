@@ -41,36 +41,43 @@ long int factorial(int n){
 }
 
 void * thread_func(void *cS){
+    int total = 0;
     
-    int clientSocket;
-    clientSocket = *(int*) cS;
-    //printf("Socket ID there: %d\n",clientSocket);
-    // Closing the server socket id
-    //close(sockfd);
-
-    // Send a confirmation message
-    // to the client
-    char inp[2000];
-    read(clientSocket, inp, 2000);
-    printf("Recieved message %s\n",inp);
-
-    int num;
-    num = atoi(inp);
-
-    long int fact = factorial(num); 
-    char fact_char[200];
-
-    sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,serverAddr.sin_addr.s_addr,serverAddr.sin_port);
-
-    
-    sem_wait(&file_lock);
-    fprintf(our_file,"%s",fact_char);
-    sem_post(&file_lock);
-    
+    while (1){
+        int clientSocket;
+        clientSocket = *(int*) cS;
+        //printf("Socket ID there: %d\n",clientSocket);
+        // Closing the server socket id
+        //close(sockfd);
 
 
-    send(clientSocket, fact_char, 200, 0);
-    printf("Replied:%s\n\n",fact_char);
+        char inp[2000];
+        read(clientSocket, inp, 2000);
+        printf("Recieved message %s\n",inp);
+
+        int num;
+        num = atoi(inp);
+
+        long int fact = factorial(num); 
+        char fact_char[200];
+
+        sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,serverAddr.sin_addr.s_addr,serverAddr.sin_port);
+
+        
+        sem_wait(&file_lock);
+        fprintf(our_file,"%s",fact_char);
+        sem_post(&file_lock);
+        
+
+
+        send(clientSocket, fact_char, 200, 0);
+        printf("Replied:%s\n\n",fact_char);
+
+        total++;
+        if (total == 20){
+            break;
+        }
+    }
 }
 
 int main(){

@@ -35,26 +35,29 @@ void * thread_func(){
         exit(0);
     }
 
-    int i = rand()%9 + 1;
-
+    //int i = rand()%9 + 1;
     int len;
-    char fact[200];
 
-    if (i<10){
-        len = 1;
+    for (int i = 1; i<=20; i++){
+        
+        char fact[200];
+
+        if (i<10){
+            len = 2;
+        }
+        else{
+            len = 3;
+        }
+
+        char num[len];
+        sprintf(num,"%d",i);
+
+        send(socket_id, num, len, 0);
+        printf("Sent message: %s\n",num);
+
+        read(socket_id, fact, 200);
+        printf("Recieved message:\n%s\n\n",fact);
     }
-    else{
-        len = 2;
-    }
-
-    char num[len];
-    sprintf(num,"%d",i);
-
-    send(socket_id, num, len, 0);
-    printf("Sent message: %s\n",num);
-
-    read(socket_id, fact, 200);
-    printf("Recieved message:\n%s\n\n",fact);
 
     close(socket_id);
 }
