@@ -66,6 +66,7 @@ void * thread_func(void *cS){
         
         sem_wait(&file_lock);
         fprintf(our_file,"%s",fact_char);
+        fflush(our_file);
         sem_post(&file_lock);
         
 
@@ -153,7 +154,7 @@ int main(){
         //int *cS = malloc(sizeof(*cS));
         pthread_create(&thread, NULL, thread_func, (void*)&clientSocket);
         pthread_join(thread, NULL);
-        fflush(our_file);
+        
     }
 
     //sleep(60);

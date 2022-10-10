@@ -126,6 +126,7 @@ int main(){
 
                 sem_wait(&file_lock);
                 fprintf(our_file,"%s",fact_char);
+                fflush(our_file);
                 sem_post(&file_lock);
 
 
