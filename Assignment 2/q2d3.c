@@ -17,6 +17,8 @@
 struct sockaddr_in saddr;
 FILE *our_file;
 
+int port[1000];
+
 void sigHandler(int sig_num)
 {   
     printf("Shutting down the file and the socket.\n");
@@ -138,6 +140,7 @@ int main(){
 
                 pollfd.data.fd = new_fd;
                 pollfd.events = EPOLLIN;
+                port[new_fd]=ntohs(new_addr.sin_port);
 
 
                 s = epoll_ctl(efd, EPOLL_CTL_ADD, new_fd, &pollfd);
@@ -166,7 +169,7 @@ int main(){
                     char fact_char[200];
                     int num = atoi(buf);
                     long fact = factorial(num);
-                    sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,saddr.sin_addr.s_addr,saddr.sin_port);
+                    sprintf(fact_char,"Factorial of %d is %ld; IP Address: %s; Port: %d\n",num,fact,inet_ntoa(new_addr.sin_addr),port[pollfds[i].data.fd]);
                     
                     
                     sem_wait(&file_lock);
@@ -187,3 +190,5 @@ int main(){
     close(server_fd);
     return 0;
 }
+
+//Reference: Code provided in tutorial

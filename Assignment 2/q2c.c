@@ -22,6 +22,14 @@ pid_t childpid;
 sem_t file_lock;
 FILE *our_file;
 
+int port[1000];
+
+// struct client_data{
+//     int fd;
+//     struct in_addr ip;
+//     int port;
+// };
+
 void sigHandler(int sig_num)
 {   
     printf("Shutting down the file and the socket.\n");
@@ -44,8 +52,12 @@ void * thread_func(void *cS){
     int total = 0;
     
     while (1){
+        // struct client_data cD;
+        // cD = *(struct client_data*) cS;
+
         int clientSocket;
         clientSocket = *(int*) cS;
+
         //printf("Socket ID there: %d\n",clientSocket);
         // Closing the server socket id
         //close(sockfd);
@@ -61,7 +73,8 @@ void * thread_func(void *cS){
         long int fact = factorial(num); 
         char fact_char[200];
 
-        sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,serverAddr.sin_addr.s_addr,serverAddr.sin_port);
+        sprintf(fact_char,"Factorial of %d is %ld; IP Address: %s; Port: %d\n",num,fact,inet_ntoa(serverAddr.sin_addr),port[clientSocket]);
+        // sprintf(fact_char,"Factorial of %d is %ld\n",num,fact);
 
         
         sem_wait(&file_lock);
@@ -90,6 +103,8 @@ int main(){
     int clientSocket;
     struct sockaddr_in cliAddr;
     socklen_t addr_size;
+
+
  
     
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -139,14 +154,21 @@ int main(){
         // store their information in cliAddr
         
         clientSocket = accept(sockfd, (struct sockaddr*)&cliAddr, &addr_size);
- 
+        printf("Socket ID here: %d\n",clientSocket);
+
         // Error handling
         if (clientSocket < 0) {
             printf("There was some error in connection.\n");
             exit(1);
         }
 
- 
+        // struct client_data cliData;
+        // cliData.fd = clientSocket;
+        // cliData.ip = serverAddr.sin_addr;
+        // cliData.port = ntohs(serverAddr.sin_port);
+
+        port[clientSocket] = ntohs(cliAddr.sin_port);
+
         // Creates a thread
         pthread_t thread;
         //printf("Socket ID here: %d\n",clientSocket);
@@ -166,3 +188,5 @@ int main(){
     fclose(our_file);
     return 0;
 }
+
+//Reference: https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/

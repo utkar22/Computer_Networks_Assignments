@@ -92,7 +92,7 @@ int main(){
         long int fact = factorial(num); 
         char fact_char[200];
 
-        sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,servaddr.sin_addr.s_addr,servaddr.sin_port);
+        sprintf(fact_char,"Factorial of %d is %ld; IP Address: %s; Port: %d\n",num,fact,inet_ntoa(cli.sin_addr),ntohs(cli.sin_port));
 
         fprintf(our_file,"%s",fact_char);
 
@@ -109,3 +109,5 @@ int main(){
     close(socket_id);
     return 0;
 }
+
+//Reference: https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/

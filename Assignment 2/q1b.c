@@ -57,6 +57,8 @@ void * thread_func(){
 
         read(socket_id, fact, 200);
         printf("Recieved message:\n%s\n\n",fact);
+
+        sleep(rand()%3);
     }
 
     close(socket_id);
@@ -64,6 +66,7 @@ void * thread_func(){
 
 
 int main(){
+    printf("Concurrent Clients using threads.\n");
     int total_threads;
     printf("Total number of threads you want: ");
     scanf("%d",&total_threads);

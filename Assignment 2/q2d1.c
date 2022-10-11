@@ -1,3 +1,6 @@
+// This is the program to run a concurrent server
+// using the select() system call
+
 #include <stdio.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -10,10 +13,12 @@
 #include <signal.h>
 
 #define DATA_BUFFER 5000
-#define MAX_CONNECTIONS 10
+#define MAX_CONNECTIONS 11
 
 struct sockaddr_in saddr;
 FILE *our_file;
+
+int port[1000];
 
 void sigHandler(int sig_num)
 {   
@@ -82,6 +87,8 @@ int main(){
 
     sem_t file_lock;
 
+    //int port[MAX_CONNECTIONS+1];
+
     /*Get the socket server fd*/
     server_fd = create_tcp_server_socket();
     if (server_fd == -1){
@@ -124,6 +131,7 @@ int main(){
                     for (i=0; i<MAX_CONNECTIONS; i++){
                         if (all_connections[i]<0){
                             all_connections[i] = new_fd;
+                            port[new_fd]=ntohs(new_addr.sin_port);
                             break;
                         }
                     }
@@ -149,9 +157,10 @@ int main(){
                             char fact_char[200];
                             int num = atoi(buf);
                             long fact = factorial(num);
-                            sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,saddr.sin_addr.s_addr,saddr.sin_port);
+                            sprintf(fact_char,"Factorial of %d is %ld; IP Address: %s; Port: %d\n",num,fact,inet_ntoa(new_addr.sin_addr),port[all_connections[i]]);
                             
                             sem_wait(&file_lock);
+                            // fprintf(our_file, "%d", port[i]);
                             fprintf(our_file,"%s",fact_char);
                             fflush(our_file);
                             sem_post(&file_lock);
@@ -182,3 +191,5 @@ int main(){
 
     return 0;
 }
+
+//Reference: Code provided in tutorial

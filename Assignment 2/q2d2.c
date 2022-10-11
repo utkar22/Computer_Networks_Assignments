@@ -1,3 +1,6 @@
+// This is the program to run a concurrent server
+// using the poll() system call
+
 #include <stdio.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -15,6 +18,8 @@
 
 struct sockaddr_in saddr;
 FILE *our_file;
+
+int port[1000];
 
 void sigHandler(int sig_num)
 {   
@@ -85,6 +90,8 @@ int main(){
     int num_open_fds = nfds;
     struct pollfd pollfds[MAX_CONNECTIONS + 1];
 
+    int port[MAX_CONNECTIONS+1];
+
     /*Get the socket server fd*/
     server_fd = create_tcp_server_socket();
     if (server_fd == -1){
@@ -116,11 +123,13 @@ int main(){
         if (ret_val >=0){
             if (pollfds[0].revents & POLLIN){
                 int new_fd = accept(server_fd, (struct sockaddr*)&new_addr, &addrlen);
+                printf("This is the port %d\n",ntohs(new_addr.sin_port));
                 if (new_fd >= 0){
                     for (int i = 1; i<MAX_CONNECTIONS; i++){
                         if (pollfds[i].fd == 0){
                             pollfds[i].fd = new_fd;
                             pollfds[i].events = POLLIN;
+                            port[new_fd]=ntohs(new_addr.sin_port);
                             useClient++;
                             break;
                         }
@@ -157,7 +166,7 @@ int main(){
                         char fact_char[200];
                         int num = atoi(buf);
                         long fact = factorial(num);
-                        sprintf(fact_char,"Factorial of %d is %ld; IP Address: %u; Port: %d\n",num,fact,saddr.sin_addr.s_addr,saddr.sin_port);
+                        sprintf(fact_char,"Factorial of %d is %ld; IP Address: %s; Port: %d\n",num,fact,inet_ntoa(new_addr.sin_addr),port[pollfds[i].fd]);
                         
                         sem_wait(&file_lock);
                         fprintf(our_file,"%s",fact_char);
@@ -177,3 +186,5 @@ int main(){
 
     return 0;
 }
+
+//Reference: code provided in tutorial
